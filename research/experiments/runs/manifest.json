@@ -1,0 +1,29 @@
+{
+  "code_sha": "1a6ea1b1694830fb2e59ec92f76ae89c448b71e2",
+  "config_hash": "5216c543b651e2fae9765efe28ff9223234f444a0f80fb55429046d9df4ee7ae",
+  "configuration_ids": [
+    "A_full_discretize_then_split",
+    "B_full_graph_mask",
+    "C_build_then_filter",
+    "D_partition_independent",
+    "E_spatial_block_holdout"
+  ],
+  "created_at_utc": "2026-10-19T10:14:26Z",
+  "dataset_hash": "e5fc053028fceeed8188305193f58c80471a9737f33c9370a2ed4af4b2cd5fd1",
+  "dataset_manifest_hash": "c3de6be965f75d573a965852067933d9bd9e5722954e993889fce62af1a71199",
+  "metrics_hash": "32f7d38394e621189fd22d15f2a89602be200b7be5b9f8731161f0dc0c7360c2",
+  "output_hashes": {
+    "effect_gate.json": "c1fcea31655ae703cbcbd4df7809c60e8d2832aa893b158ea1286e6ce2fd435f",
+    "runs.json": "a6651765f98878feddcc301b04d3060a40abfc32256eae9d47a3fd45e4bd0b51",
+    "summary.json": "bfee4ab1ce478f93240cf6f852cdb766ce162f4e59502f0f0fcf4427e338e72e"
+  },
+  "package_version": "0.1.0",
+  "runner_hash": "7af09fc86f2915f1f874101f175833fc90fc44a0fccf5fa8045dd528366ba074",
+  "seed_budget": [
+    11,
+    22,
+    33,
+    44,
+    55
+  ]
+}

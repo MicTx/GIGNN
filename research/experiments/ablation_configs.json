@@ -1,0 +1,54 @@
+{
+  "schema_version": "1",
+  "dataset_name": "phase2_synthetic_lattice_v1",
+  "shared_budget": {
+    "detector_grid": {"discretizer": ["quantiles"], "max_bins": [3]},
+    "graph_grid": {"strategy": ["knn"], "k": [1, 2]},
+    "model_grid": {
+      "hidden_channels": [[8]],
+      "learning_rate": [0.01],
+      "max_epochs": [5]
+    },
+    "random_seeds": [11, 22, 33, 44, 55],
+    "validation_fraction": 0.2222222222222222,
+    "test_fraction": 0.2222222222222222,
+    "class_order": ["low", "medium", "high"]
+  },
+  "configurations": [
+    {
+      "id": "A_full_discretize_then_split",
+      "difference": "Fit GeoDetector on the full labeled table before holdout.",
+      "selector_scope": "full",
+      "graph_mode": "partition_independent",
+      "split_mode": "random"
+    },
+    {
+      "id": "B_full_graph_mask",
+      "difference": "Build one full-data graph and score partitions by induced subgraph masks.",
+      "selector_scope": "train",
+      "graph_mode": "full_graph_mask",
+      "split_mode": "random"
+    },
+    {
+      "id": "C_build_then_filter",
+      "difference": "Build a full-data graph then filter partition edges from that graph.",
+      "selector_scope": "train",
+      "graph_mode": "build_then_filter",
+      "split_mode": "random"
+    },
+    {
+      "id": "D_partition_independent",
+      "difference": "Build train/validation/test graphs independently from each partition only.",
+      "selector_scope": "train",
+      "graph_mode": "partition_independent",
+      "split_mode": "random"
+    },
+    {
+      "id": "E_spatial_block_holdout",
+      "difference": "Same independent graphs as D, but hold out whole spatial groups.",
+      "selector_scope": "train",
+      "graph_mode": "partition_independent",
+      "split_mode": "spatial_groups"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "class_counts": {
+    "high": 9,
+    "low": 27,
+    "medium": 45
+  },
+  "created_at_utc": "2026-07-14T05:35:47Z",
+  "dataset_name": "phase2_synthetic_lattice_v1",
+  "files": {
+    "dataset.csv": "e5fc053028fceeed8188305193f58c80471a9737f33c9370a2ed4af4b2cd5fd1",
+    "schema.json": "a11ac78eb68fc116a91b4bd440ee53f49e13465c397d48e33d1f87b32281c32c"
+  },
+  "generator": "research/scripts/generate_phase2_dataset.py",
+  "generator_parameters": {
+    "class_order": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "grid_size": 9,
+    "seed": 20260714
+  },
+  "license": "MIT",
+  "package_version": "0.1.0",
+  "rebuild_command": ".venv/bin/python research/scripts/generate_phase2_dataset.py --output-dir research/experiments",
+  "row_count": 81,
+  "schema_version": "1",
+  "spatial_groups": [
+    "R0C0",
+    "R0C1",
+    "R0C2",
+    "R1C0",
+    "R1C1",
+    "R1C2",
+    "R2C0",
+    "R2C1",
+    "R2C2"
+  ]
+}

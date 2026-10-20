@@ -1,0 +1,9 @@
+{
+  "bias_improved": false,
+  "branch": "conservative",
+  "paired_test_diff_ci_low": -0.05963980479057188,
+  "paired_test_diff_mean": 1.1102230246251566e-17,
+  "ranking_improved": false,
+  "rationale": "Use conservative branch: D does not beat C with a paired 95% CI above zero on the independent test, so only graph-isolation auditability is supported.",
+  "structure_invariant_passed": true
+}

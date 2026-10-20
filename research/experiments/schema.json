@@ -1,0 +1,30 @@
+{
+  "class_order": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "coordinate_columns": [
+    "x",
+    "y"
+  ],
+  "dataset_name": "phase2_synthetic_lattice_v1",
+  "feature_columns": [
+    "primary",
+    "secondary",
+    "noise"
+  ],
+  "generator": "research/scripts/generate_phase2_dataset.py",
+  "group_column": "spatial_group",
+  "license": "MIT",
+  "notes": [
+    "No external remote-sensing or proprietary GIS data is used.",
+    "Spatial groups are 3x3 blocks on a 9x9 lattice and must not cross partitions.",
+    "Class order is explicit and fixed for ordinal encoding."
+  ],
+  "row_count": 81,
+  "schema_version": "1",
+  "source": "deterministic synthetic spatial lattice",
+  "spatial_unit_id": "node_id",
+  "target_column": "label"
+}
