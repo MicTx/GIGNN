@@ -1,0 +1,299 @@
+# GIGNN Full LLM Context
+
+> Comprehensive but stable context for LLMs, agents, and RAG systems. This file summarizes code-backed behavior and points to canonical detailed docs. Prefer linked docs for exact field-level details.
+
+## 1. Project Identity
+
+GIGNN means geographically informed graph neural network. This repository is the Python implementation package of the published GIGNN paper, for spatial simulation and prediction over GIS/RS indicator tables.
+
+Reference paper (published): Ma, X., Zhang, Z., & Song, Y. (2025). Geographically informed graph neural networks. Spatial Statistics, 69, 100920. https://doi.org/10.1016/j.spasta.2025.100920
+
+The core workflow is:
+
+```text
+pandas feature table + labels + geometry/edge_index
+  -> validation and optional spatial dataset standardization
+  -> GeoDetector discretization, q scoring, interaction detection, feature selection
+  -> graph construction or explicit edge validation
+  -> Gaussian edge attributes and edge weights
+  -> PyTorch Geometric data conversion
+  -> notebook-aligned weighted multi-hop GIGNN node classification
+  -> prediction, probability prediction, simulation, reports, diagnostics, plotting, research artifact export
+```
+
+The package is not a hosted service. It defines no HTTP routes, workers, database schema, environment-variable contract, or automatic release upload.
+
+Current implementation status: the paper's GIGNN mechanism is implemented end to end: interaction-detector feature selection (Fig. 8), Fisher-Jenks stratification (Eq. (1)), Gaussian `edge_attr`/`edge_weight` that scale neighbor messages (Eq. (2)), `NeighborAggregator`/`GCN`/`GIGNN` (Eq. (3)-(5)), per-hop `num_neighbors_list` sampling, deterministic full-neighborhood inference, transductive `train_mask` fitting and k-fold `cross_validate`, and bias Moran's I diagnostics. The package does not claim full paper numerical reproduction, external data acquisition, exact notebook filesystem paths, every plot, or every baseline experiment. Known divergences between paper, notebook, and package are documented in `docs/IMPLEMENTATION_STATUS.md`.
+
+## 2. Documentation Map
+
+| Need | Read |
+| --- | --- |
+| Fast project overview | `README.md`, `llms.txt` |
+| Current GIGNN implementation status | `docs/IMPLEMENTATION_STATUS.md` |
+| Full capability hierarchy | `docs/FEATURE_OVERVIEW.md` |
+| User workflow | `docs/USER_GUIDE.md` |
+| API signatures and returns | `docs/API.md` |
+| Inputs, graph semantics, prediction semantics, limits | `docs/DATA_CONTRACT.md` |
+| Internal modules and data flow | `docs/ARCHITECTURE.md` |
+| Research evidence paths | `research/README.md` |
+| Report dataclass fields | `docs/REPORTS.md` |
+| Plotting inputs and outputs | `docs/PLOTTING.md` |
+| Example behavior | `docs/EXAMPLES.md` |
+| Commands and verification | `docs/COMMANDS.md` |
+| Development workflow | `docs/CONTRIBUTING.md` |
+| Release process | `docs/RELEASE.md` |
+| Operational troubleshooting | `docs/RUNBOOK.md` |
+| Security and trust boundaries | `docs/SECURITY.md` |
+| Agent task routing | `docs/AGENTS.md` |
+| RAG chunking and retrieval | `docs/RAG_INDEX.md` |
+
+## 3. Capability Layers
+
+### 3.1 Data Preparation
+
+`standardize_spatial_dataset` accepts a pandas `DataFrame` with target, optional ID, optional geometry, and feature columns. It returns `StandardizedSpatialDataset` and `SpatialDatasetReport`.
+
+Validation helpers enforce finite numeric features, aligned labels, normalized edge indices, and immutable-style label encoding.
+
+### 3.2 GeoDetector
+
+`gignn.geodetector` supports continuous feature discretization, GeoDetector q statistics, p-values, pairwise interaction detection, and feature selection.
+
+Supported discretizers: `quantiles`, `equal_interval`, `natural_breaks`, `fisher_jenks`, `maximum_breaks`, `box_plot`, `std_mean`. `natural_breaks`/`fisher_jenks` use a deterministic in-package Fisher-Jenks dynamic program; `maximum_breaks` is a separate widest-gap method. `GeoDetectorSelector` defaults to the paper's `natural_breaks`/5-bin interaction-network selection (`strategy="interaction"`, `top_interactions=10`); `strategy="factor"` selects by factor q alone.
+
+### 3.3 Graph Construction
+
+Graph structure can be explicit or geometry-derived.
+
+Explicit graph input: PyG-style `edge_index` shaped `(2, num_edges)` or `(num_edges, 2)`.
+
+Geometry strategies:
+
+- `knn`: directed nearest-neighbor edges by centroid distance.
+- `distance`: directed edges within a positive threshold.
+- `contiguity`: directed edges using `touches` or `intersects`.
+
+Graph utilities include adjacency dictionaries, Gaussian edge attributes, scalar edge weights, isolated-node filtering, and PyG data conversion with optional `edge_attr` and `edge_weight`.
+
+### 3.4 Model and Training
+
+`GIGNN` implements the notebook-aligned core with `NeighborAggregator`, `GCN`, per-hop `num_neighbors_list` sampling such as `(6, 12)`, and Gaussian edge weights consumed during neighbor aggregation. `GraphSAGEClassifier` remains available as a lower-level compatibility model.
+
+Training uses class-weighted cross entropy and Adam.
+
+`TrainingConfig` controls epochs, learning rate, weight decay, seed, and device. `TrainingResult` stores per-epoch losses.
+
+### 3.5 Estimators
+
+`GIGNNClassifier` is the direct estimator. It resolves graph edges, computes Gaussian edge attributes/weights, builds PyG data, trains weighted multi-hop GIGNN, predicts labels, predicts probabilities, scores accuracy, saves checkpoints, and loads checkpoints.
+
+`GIGNNAutoClassifier` is the high-level estimator. It searches GeoDetector parameters, graph candidates, and model candidates. It exposes `selector_`, `estimator_`, `selected_features_`, `edge_index_`, and reports.
+
+### 3.6 Reports and Diagnostics
+
+Automatic reports:
+
+- `SpatialRelationshipReport`
+- `GraphSelectionReport`
+- `ModelSelectionReport`
+- `GeneralizationReport`
+- `SimulationReport`
+
+Generalization helpers produce accuracy, bias rows, classification reports, Moran's I residual tests (`morans_i`, `esda.Moran`-compatible), transductive k-fold evaluation (`cross_validate`), and model accuracy tables.
+
+Research artifact export writes fitted auto-workflow evidence into `raw/`, `preprocessing/`, `process/`, and `results/` directories. It records input schema, summary, fingerprint, descriptive statistics, missing/fill summaries, GeoDetector factor and interaction scores, discretization bins, graph/model candidates, selected edges, training loss, predictions, probabilities, and validation metrics. Raw table export is opt-in via `include_raw=True`.
+
+Bias is defined as `predicted_code - observed_code` (paper Fig. 10). Positive bias is labeled `Overestimated (...)`; negative bias is labeled `Underestimated (...)`.
+
+### 3.7 Plotting
+
+Top-level plotting functions are lazy-loaded. They return Matplotlib objects and only write files when `output_path` is provided.
+
+Plotting covers classification maps, observed/predicted comparison maps, bias maps, accuracy bars, discretization histograms, training curves, metric boxplots, and interaction networks.
+
+Publication helpers include `apply_publication_style`, `infer_publication_layout`, `add_panel_label`, `save_publication_figure`, `NATURE_PALETTE`, and `NATURE_COLOR_CYCLE`. They support Nature-style rcParams, adaptive figure sizing/spacing/legend/mark parameters, editable SVG text via `svg.fonttype="none"`, semantic colors, panel labels, and SVG/PNG multi-format export. Importing `gignn` does not automatically change Matplotlib global settings.
+
+### 3.8 Persistence and Safety
+
+`GIGNNClassifier.save` writes checkpoint payloads. `GIGNNClassifier.load` loads on CPU using `torch.load(..., weights_only=True)` and validates checkpoint schema, parameters, classes, feature metadata, tensor count, and tensor element count.
+
+Checkpoint paths are local filesystem inputs. Applications wrapping GIGNN behind services must constrain save/load paths.
+
+## 4. Public API Summary
+
+Top-level APIs:
+
+```python
+from gignn import (
+    GIGNNAutoClassifier,
+    GIGNNClassifier,
+    standardize_spatial_dataset,
+    generalization_diagnostics,
+    morans_i,
+    cross_validate,
+    model_accuracy_table,
+    export_research_artifacts,
+    NATURE_PALETTE,
+    NATURE_COLOR_CYCLE,
+    apply_publication_style,
+    infer_publication_layout,
+    add_panel_label,
+    save_publication_figure,
+    plot_classification_map,
+    plot_prediction_comparison,
+    plot_observed_prediction_bias,
+    plot_accuracy_comparison,
+    plot_discretization_histogram,
+    plot_training_curves,
+    plot_metric_boxplot,
+    plot_interaction_network,
+    MoranResult,
+    CrossValidationReport,
+    GIGNNError,
+    ValidationError,
+    NotFittedError,
+    EdgeWeightWarning,
+)
+```
+
+GeoDetector APIs:
+
+```python
+from gignn.geodetector import (
+    DiscretizationMetadata,
+    GeoDetectorSelector,
+    factor_detector,
+    geodetector_q,
+    interaction_detector,
+    spatial_discretization,
+)
+```
+
+Graph APIs:
+
+```python
+from gignn.graph import (
+    build_adjacency_dict,
+    build_pyg_data,
+    build_spatial_edges,
+    calculate_edge_weights,
+    calculate_gaussian_edge_attributes,
+    filter_isolated_nodes,
+)
+```
+
+## 5. Input Contract Summary
+
+Feature table:
+
+- pandas `DataFrame`
+- non-empty
+- finite numeric columns
+- prediction columns match training columns for `GIGNNClassifier`
+
+Labels:
+
+- length-aligned with feature rows
+- non-empty
+- no missing values
+- strings and non-contiguous integers supported
+
+Graph:
+
+- explicit `edge_index` or geometry is required for model fitting
+- `GIGNNClassifier.num_neighbors_list` length must equal `len(hidden_channels) + 1`
+- `edge_attr` has shape `(num_edges, num_edge_features)` and `edge_weight` has shape `(num_edges,)`
+- automatic geometry graph construction has `MAX_AUTO_GRAPH_NODES = 1_000`
+- graph construction raises `ValidationError` if no edges are produced
+
+Auto prediction behavior:
+
+- explicit prediction `edge_index` wins
+- if selected strategy is not `edge_index`, geometry can rebuild prediction edges
+- if selected strategy is `edge_index`, geometry alone does not replace the fitted graph; the fitted `edge_index_` is reused unless a new `edge_index` is supplied
+
+## 6. Resource Limits
+
+| Constant | Value |
+| --- | --- |
+| `MAX_AUTO_GRAPH_NODES` | `1_000` |
+| `MAX_EDGES` | `1_000_000` |
+| `MAX_FEATURES` | `10_000` |
+| `MAX_CLASSES` | `10_000` |
+| `MAX_GRAPH_NEIGHBORS` | `1_000` |
+| `MAX_HIDDEN_CHANNEL` | `4_096` |
+| `MAX_HIDDEN_LAYERS` | `8` |
+| `MAX_TRAINING_EPOCHS` | `10_000` |
+| `MAX_CHECKPOINT_BYTES` | `100 MiB` |
+| `MAX_CHECKPOINT_TENSORS` | `128` |
+| `MAX_CHECKPOINT_TENSOR_ELEMENTS` | `10_000_000` |
+
+## 7. Common Agent Tasks
+
+For adding or changing public API documentation, update `docs/API.md`, `docs/FEATURE_OVERVIEW.md`, and possibly `llms.txt` / `llms-full.txt`.
+
+For changing validation, labels, graph behavior, prediction edge semantics, or resource limits, update `docs/DATA_CONTRACT.md`, `docs/API.md`, and tests.
+
+For changing reports, update `docs/REPORTS.md`, `docs/API.md`, and any examples using report fields.
+
+For changing plotting, update `docs/PLOTTING.md`, `docs/API.md`, and plotting tests.
+
+For changing package metadata, install commands, or build flow, update `docs/COMMANDS.md`, `docs/RELEASE.md`, `docs/RUNBOOK.md`, and README as needed.
+
+For changing checkpoint loading, file paths, output writing, or untrusted input behavior, update `docs/SECURITY.md` and run security-oriented review.
+
+## 8. Verification Commands
+
+Use `.venv/bin/python` or another Python `>=3.10` environment with project dependencies installed.
+
+```bash
+.venv/bin/python -m pytest
+.venv/bin/python examples/quickstart.py
+.venv/bin/python -m build
+.venv/bin/python -m black --check gignn tests examples
+```
+
+Known environment warning: Black may emit a Python 3.11/3.15 safety parsing warning while still reporting all files unchanged.
+
+## 9. Security Notes
+
+- Treat feature tables, labels, geometry, graph edges, checkpoints, and output paths as untrusted at boundaries.
+- Do not expose `GIGNNClassifier.load` or plotting `output_path` directly to arbitrary user paths in a service wrapper.
+- The package currently requires no runtime secrets and no environment variables.
+- No network calls are part of the package runtime.
+
+## 10. Canonical Source Files
+
+Implementation:
+
+- `gignn/__init__.py`
+- `gignn/auto.py`
+- `gignn/estimators.py`
+- `gignn/validation.py`
+- `gignn/generalization.py`
+- `gignn/reports.py`
+- `gignn/plotting.py`
+- `gignn/limits.py`
+- `gignn/geodetector/*.py`
+- `gignn/graph/*.py`
+- `gignn/models/graphsage.py`
+- `gignn/training/*.py`
+- `gignn/io/persistence.py`
+
+Tests:
+
+- `tests/test_auto.py`
+- `tests/test_estimator.py`
+- `tests/test_validation.py`
+- `tests/test_geodetector.py`
+- `tests/test_graph_builders.py`
+- `tests/test_generalization_standard.py`
+- `tests/test_plotting.py`
+- `tests/test_model_training.py`
+- `tests/test_training.py`
+- `tests/test_import.py`
+
+Example:
+
+- `examples/quickstart.py`

@@ -1,0 +1,103 @@
+# GIGNN LLM Context
+
+> Canonical short context for LLMs, coding agents, RAG systems, and documentation crawlers.
+
+## Project
+
+GIGNN means geographically informed graph neural network. This repository is the Python implementation package of the published GIGNN paper, for spatial simulation and prediction over GIS/RS spatial-unit indicator tables.
+
+Reference paper (published): Ma, X., Zhang, Z., & Song, Y. (2025). Geographically informed graph neural networks. Spatial Statistics, 69, 100920. https://doi.org/10.1016/j.spasta.2025.100920
+
+It supports aligned tabular data where each row is one region, grid cell, sample, or spatial unit. It discovers feature-target spatial relationships, builds graph structure from geometry or explicit edges, trains a notebook-aligned weighted multi-hop GIGNN node classifier, and produces prediction, simulation, generalization, report, and plotting outputs.
+
+Not in scope: raw remote-sensing image download, mosaicking, reprojection, raster sampling, hosted HTTP service deployment, databases, or automatic PyPI publishing.
+
+Implementation status: the paper's GIGNN mechanism is implemented end to end (interaction-network selection, Jenks stratification, Gaussian edge weights in message passing, deterministic inference, transductive k-fold, Moran's I diagnostics); full paper numerical reproduction, external data acquisition, notebook filesystem paths, and all baseline experiments are not claimed. Known divergences between paper, notebook, and package are listed in `docs/IMPLEMENTATION_STATUS.md`.
+
+## Important Files
+
+| File | Use |
+| --- | --- |
+| `README.md` | Human project entry point and documentation navigation. |
+| `docs/IMPLEMENTATION_STATUS.md` | Current GIGNN core implementation audit and scope boundary. |
+| `docs/FEATURE_OVERVIEW.md` | Layered capability map from code. |
+| `docs/USER_GUIDE.md` | End-to-end user workflow. |
+| `docs/API.md` | Public and advanced API reference. |
+| `docs/DATA_CONTRACT.md` | Input, graph, label, prediction, and resource limits. |
+| `docs/ARCHITECTURE.md` | Module boundaries and data flow. |
+| `research/README.md` | Source paper and notebook evidence paths for alignment audits. |
+| `docs/REPORTS.md` | Report dataclasses and fields. |
+| `docs/PLOTTING.md` | Plotting function contracts. |
+| `docs/AGENTS.md` | Coding-agent task guide. |
+| `docs/RAG_INDEX.md` | Retrieval routing and chunking guide. |
+| `docs/SECURITY.md` | Trust boundaries for data, checkpoints, and paths. |
+| `docs/COMMANDS.md` | Install, test, build, and validation commands. |
+
+## Main APIs
+
+Top-level `gignn` exports:
+
+- `GIGNNAutoClassifier`: high-level workflow that searches GeoDetector, graph, and model candidates.
+- `GIGNNClassifier`: direct weighted multi-hop GIGNN node classifier with explicit graph/model control.
+- `standardize_spatial_dataset`: validates and standardizes spatial-unit DataFrames.
+- `generalization_diagnostics`: computes accuracy, bias table, classification report, and optional bias Moran's I.
+- `morans_i`, `cross_validate`: Moran's I residual test; transductive k-fold evaluation with pooled out-of-fold predictions.
+- `model_accuracy_table`: creates model accuracy comparison tables.
+- `export_research_artifacts`: writes raw/preprocessing/process/results artifact bundles for fitted auto workflows.
+- `plot_classification_map`, `plot_prediction_comparison`, `plot_observed_prediction_bias`, `plot_accuracy_comparison`, `plot_discretization_histogram`, `plot_training_curves`, `plot_metric_boxplot`, `plot_interaction_network`.
+- Publication plotting helpers: `apply_publication_style`, `infer_publication_layout`, `add_panel_label`, `save_publication_figure`, `NATURE_PALETTE`, `NATURE_COLOR_CYCLE`.
+- Exceptions: `GIGNNError`, `ValidationError`, `NotFittedError`.
+
+Key subpackages:
+
+- `gignn.geodetector`: `spatial_discretization`, `factor_detector`, `geodetector_q`, `interaction_detector`, `GeoDetectorSelector`.
+- `gignn.graph`: `build_spatial_edges`, `build_pyg_data`, `build_adjacency_dict`, `calculate_gaussian_edge_attributes`, `calculate_edge_weights`, `filter_isolated_nodes`.
+- `gignn.models`: notebook-aligned `GIGNN`, `multihop_sampling`, and compatibility `GraphSAGEClassifier`.
+- `gignn.training`: `TrainingConfig`, `TrainingResult`, `train_node_classifier`, `calculate_class_weights`, `set_random_seed`.
+
+## Input Contract
+
+- `X` must be a non-empty pandas `DataFrame` with finite numeric feature columns.
+- `y` must be non-empty, length-aligned with `X`, and contain no missing labels.
+- Labels may be strings or non-contiguous integers; predictions return original labels.
+- Graph structure must come from explicit `edge_index` or geometry.
+- `edge_index` accepts `(2, num_edges)` or `(num_edges, 2)` integer arrays.
+- Geometry for `knn` and `distance` must expose `x/y` or `centroid.x/centroid.y`.
+- Geometry for `contiguity` should expose `touches` or `intersects`.
+
+## Typical Usage
+
+```python
+from gignn import GIGNNAutoClassifier
+
+model = GIGNNAutoClassifier(random_state=42)
+model.fit(X, y, geometry=geometry)
+predictions = model.predict(X_new, geometry=geometry_new)
+probabilities = model.predict_proba(X_new, geometry=geometry_new)
+simulation = model.simulate(X_scenario, baseline_X=X, geometry=geometry)
+```
+
+Use `GIGNNClassifier` when the graph and model configuration are already known.
+
+## Verification
+
+Use a Python `>=3.10` environment with dependencies installed.
+
+```bash
+.venv/bin/python -m pytest
+.venv/bin/python examples/quickstart.py
+.venv/bin/python -m build
+.venv/bin/python -m black --check gignn tests examples
+```
+
+Current validated baseline: 115 pytest tests pass.
+
+## Agent Rules
+
+- Prefer `docs/FEATURE_OVERVIEW.md` for capability discovery.
+- Prefer `docs/IMPLEMENTATION_STATUS.md` when asked whether GIGNN is fully implemented.
+- Prefer `docs/API.md` for signatures and return values.
+- Prefer `docs/DATA_CONTRACT.md` before changing validation, graph, prediction, or resource-limit behavior.
+- Prefer `docs/SECURITY.md` before touching checkpoint loading, output paths, or untrusted input handling.
+- Do not claim service, API endpoint, database, environment variable, or PyPI automation behavior unless code adds it.
+- Do not use macOS system `python3` if it is Python 3.9; use `.venv/bin/python` or Python `>=3.10`.

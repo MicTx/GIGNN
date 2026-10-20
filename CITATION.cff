@@ -1,0 +1,46 @@
+# This CITATION.cff file was generated with citation-file-format support.
+# To cite GIGNN in publications, use this file or the reference below.
+cff-version: 1.2.0
+message: "If you use GIGNN, please cite both the software and the paper."
+title: GIGNN
+abstract: "Python implementation of the geographically informed graph neural network (GIGNN) proposed in the paper below. Following the spatial statistic trinity framework, GIGNN leverages attribute differences by spatial stratified heterogeneity, quantifies connections between geographical entities, and applies k-order neighbour attribute aggregation and message passing for spatial simulation and prediction."
+authors:
+  - family-names: Ma
+    given-names: Xuankai
+    affiliation: "Urumqi Urban Institute of Geotechnical Investigation Surveying and Mapping, Urumqi, PR China"
+  - family-names: Zhang
+    given-names: Zehua
+    affiliation: "School of Design and the Built Environment, Curtin University, Perth, Australia"
+  - family-names: Song
+    given-names: Yongze
+    affiliation: "School of Design and the Built Environment, Curtin University, Perth, Australia"
+version: 0.1.0
+date-released: "2026-10-05"
+license: MIT
+repository-code: "https://github.com/MicTx/GIGNN"
+keywords:
+  - GIGNN
+  - spatial statistic trinity
+  - spatial heterogeneity
+  - spatial features
+  - graph neural networks
+  - geodetector
+  - geospatial
+  - GIS
+preferred-citation:
+  type: article
+  title: "Geographically informed graph neural networks"
+  authors:
+    - family-names: Ma
+      given-names: Xuankai
+      affiliation: "Urumqi Urban Institute of Geotechnical Investigation Surveying and Mapping, Urumqi, PR China"
+    - family-names: Zhang
+      given-names: Zehua
+      affiliation: "School of Design and the Built Environment, Curtin University, Perth, Australia"
+    - family-names: Song
+      given-names: Yongze
+      affiliation: "School of Design and the Built Environment, Curtin University, Perth, Australia"
+  journal: "Spatial Statistics"
+  volume: 69
+  year: 2025
+  doi: "10.1016/j.spasta.2025.100920"

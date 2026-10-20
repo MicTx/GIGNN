@@ -1,0 +1,23 @@
+# Local environments
+.venv/
+.claude/
+
+# Python caches and build outputs
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Notebook and OS noise
+.ipynb_checkpoints/
+.DS_Store
+tmp/
+
+# Transient test/coverage outputs
+.coverage
+coverage.xml
+.zcode/
